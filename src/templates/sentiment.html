@@ -2,7 +2,7 @@
 {% block title %}Sentiment{% endblock %} 
 {% block content %}
 <h1 align="center">Sentiment</h1>
-<form>
+<form method="POST">
     <div class="form-group">
         <label>Enter Your articles : </label>
         <textarea 
@@ -10,8 +10,13 @@
             id="exampleFormControlTextarea1" 
             rows="8"
             placeholder="Type Here"
+            name="newInput"
         ></textarea>
     </div>
   <input type="submit" value="Submit" />
 </form>
+<div>
+    <h3>Predicion is </h3>
+    {{ prediction }}
+</div>
 {% endblock %}

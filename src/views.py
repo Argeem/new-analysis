@@ -1,7 +1,16 @@
 from flask import Blueprint,render_template,request
+from sklearn.feature_extraction.text import CountVectorizer
 import re
 import nltk
 import heapq
+from nltk.stem import PorterStemmer
+from nltk.corpus import stopwords
+import nltk
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+import matplotlib.pyplot as plt  # For Visualisation
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.model_selection import train_test_split
 
 
 views = Blueprint('views',__name__)
@@ -13,7 +22,14 @@ def home():
 
 @views.route('/sentiment',methods=['GET','POST'] )
 def sentiment():
-    return render_template("sentiment.html")
+    prediction= ""
+    if request.method == 'GET':
+        return render_template("sentiment.html",prediction=prediction)
+    else:
+        input_new = request.form['newInput']
+        if input_new != None and input_new!="":
+            prediction = predictSentiment(input_new)  
+        return render_template("sentiment.html",prediction=prediction)
 
 @views.route('/summary-articles',methods=['GET','POST'] )
 def summaryArticles():
@@ -22,11 +38,64 @@ def summaryArticles():
         return render_template("summary-article.html",summary=summary)
     else:
         input_articles = request.form['articles']
-        summary = summaryArticlesWithInput(input_articles)
+        if input_articles != None and input_articles!="":
+            summary = summaryArticlesWithInput(input_articles)
         return render_template("summary-article.html",summary=summary)
     
 
-# model    
+# model
+def predictSentiment(newInput):
+    data = pd.read_csv('src/static/main.csv')
+    data = data[['Dates', 'News', 'PriceSentiment']]
+    print(data.shape)
+    data.head(7)
+
+    data.isnull().sum()
+
+    data = data.dropna()
+    data.isnull().sum()
+
+    Sentiment = data['PriceSentiment'].unique()
+    print(Sentiment)
+
+    data.groupby(data['PriceSentiment']).News.count().plot.bar(ylim=0)
+    plt.show()
+
+
+    # -- NLP --#
+    nltk.download('stopwords')
+
+    stemmer = PorterStemmer()
+    words = stopwords.words("english")
+
+    data['processedtext'] = data['News'].apply(lambda x: " ".join([stemmer.stem(
+        i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in words]).lower())
+    print(data.shape)
+    data.head(10)
+
+    # Pre-process Data
+    data['processedtext'] = data['processedtext'].str.strip().str.lower()
+
+    # Splitting Data
+    df = data
+    # Split into training and testing data
+    x = data['News']
+    y = data['PriceSentiment']
+    x, x_test, y, y_test = train_test_split(
+        x, y, stratify=y, test_size=0.3, random_state=42)
+    # Vectorize text reviews to numbers
+    vec = CountVectorizer(stop_words='english')
+    x = vec.fit_transform(x).toarray()
+    x_test = vec.transform(x_test).toarray()
+
+    # Model Generation
+    model = MultinomialNB()
+    model.fit(x, y)
+    prediction = model.predict(vec.transform([newInput]))  # Output
+    prediction =prediction[0]
+    return prediction
+
+
 def summaryArticlesWithInput(article_text):
     # Removing Square Brackets and Extra Spaces
     article_text = re.sub(r'\[[0-9]*\]', ' ', article_text)
@@ -61,3 +130,5 @@ def summaryArticlesWithInput(article_text):
     summary_sentences = heapq.nlargest(7, sentence_scores, key=sentence_scores.get)
     summary = ' '.join(summary_sentences)
     return summary
+
+
