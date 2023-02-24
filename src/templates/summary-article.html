@@ -4,19 +4,17 @@
 <h1 align="center">Summary Articles</h1>
 <form method="POST">
     <div class="form-group">
-        <label>Enter Your articles : </label>
         <textarea 
             class="form-control" 
             id="exampleFormControlTextarea1" 
             rows="8"
-            placeholder="Type Here"
+            placeholder="Enter Your articles"
             name="articles"
         ></textarea>
     </div>
-  <input type="submit" value="Summary It!" />
+  <input align="center" type="submit" value="Summary!" />
 </form>
-<div>
-    <h3>Summary is </h3>
+<div class="summary">
     {{ summary }}
 </div>
 {% endblock %}
