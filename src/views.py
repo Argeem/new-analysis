@@ -55,13 +55,6 @@ def predictSentiment(newInput):
     data = data.dropna()
     data.isnull().sum()
 
-    Sentiment = data['PriceSentiment'].unique()
-    print(Sentiment)
-
-    data.groupby(data['PriceSentiment']).News.count().plot.bar(ylim=0)
-    plt.show()
-
-
     # -- NLP --#
     nltk.download('stopwords')
 
@@ -70,7 +63,6 @@ def predictSentiment(newInput):
 
     data['processedtext'] = data['News'].apply(lambda x: " ".join([stemmer.stem(
         i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in words]).lower())
-    print(data.shape)
     data.head(10)
 
     # Pre-process Data
